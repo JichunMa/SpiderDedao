@@ -4,6 +4,8 @@ from requests import Response
 from model import DeDaoModel
 from tools import startDownload
 
+# 下载数
+count = '574'
 headers = {
     "X-App-Key": "android-4.0.0"
     , "X-Uid": "11772872"
@@ -38,7 +40,7 @@ headers = {
 url = 'https://entree.igetget.com/acropolis/v1/audio/listall'
 data = {'column_id': '2',
         'h': '{"u":"11772872","thumb":"xl","dt":"phone","ov":"8.0.0","net":"WIFI","os":"ANDROID","d":"bb10546ba86ea9c6","dv":"DUK-AL20","t":"json","chil":"0","v":"2","av":"4.0.0","scr":"4.0","adv":"1","ts":"1528035689","s":"b271e66881c91499","seid":"9868b3af52c2cdd12dad3654d975da91","hitdot":""}',
-        'count': '574',
+        'count': count,
         'max_id': '0',
         'section': '0',
         'since_id': '0',
@@ -52,10 +54,18 @@ if __name__ == '__main__':
         info_list = json_data['c']['list']
         for info in info_list:
             audio_detail = info['audio_detail']
+            publish_time = info['publish_time']
+            if publish_time is None:
+                publish_time = ''
             if audio_detail:
-                title = ''.join(audio_detail['title'])
-                mp3_play_url = ''.join(audio_detail['mp3_play_url'])
-                model = DeDaoModel(title, mp3_play_url)
+                title = audio_detail['title']
+                mp3_play_url = audio_detail['mp3_play_url']
+                duration = audio_detail['duration']
+
+                if title is None or mp3_play_url is None:
+                    continue
+
+                model = DeDaoModel(title, mp3_play_url, publish_time, duration)
                 model_list.append(model)
             else:
                 print('数据项为空')
@@ -65,8 +75,9 @@ if __name__ == '__main__':
         finish_index = 0
         for model in model_list:
             startDownload(model.url, model.name)
+            print(model.__dict__)
             finish_index = finish_index + 1
-            print('finish--' + str(finish_index))
+            print('finish' + '-' * 6 + str(finish_index))
 
 else:
     print('接口请求失败')
